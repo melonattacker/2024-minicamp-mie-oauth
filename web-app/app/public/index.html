@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Bank App</title>
+</head>
+<body>
+    <h1>Home</h1>
+    <div id="usersContainer"></div>
+    <div id="errorContainer"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async() => {
+            const token = new URLSearchParams(window.location.search).get('token');
+            if (!token && !localStorage.getItem('token')) {
+                document.getElementById('flagContainer').innerHTML = "<p>No token provided. You need to <a href='/signin?next=/'>signin</a> .</p>";
+                return;
+            }
+            
+            if (token) {
+                localStorage.setItem('token', token);
+            }
+
+            try {
+                // ユーザー一覧の取得
+                const response = await fetch('/users');
+                const result = await response.json();
+                const users = result.users;
+
+                const userList = document.createElement('ul');
+                users.forEach(user => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `Username: ${user.username}, Amount: ${user.amount}`;
+                    userList.appendChild(listItem);
+                });
+
+                document.getElementById('usersContainer').appendChild(userList);
+
+            } catch (error) {
+                document.getElementById('flagContainer').innerText = 'Error fetching flag.';
+            }
+        });
+    </script>
+</body>
+</html>

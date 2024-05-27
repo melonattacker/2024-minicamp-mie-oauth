@@ -2,24 +2,29 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Web App</title>
+    <title>Simple Bank App</title>
 </head>
 <body>
-    <h1>Web App - Login</h1>
-    <input type="text" id="username" placeholder="guest">
-    <input type="password" id="password" placeholder="guest">
-    <button type="submit" onclick="login()">Login</button>
+    <h1>Sign Up</h1>
+    <div>
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="guest">
+    </div>
+    <div>
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="guest">
+    </div>
+    <button type="submit" onclick="signup()">Sign In</button>
     <div id="errorContainer"></div>
-    <div id="flagContainer"></div>
     <script>
-        async function login() {
+        async function signup() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
     
             try {
-                const response = await fetch('/login', {
+                const response = await fetch('/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -29,14 +34,7 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    const params = new URLSearchParams(window.location.search);
-                    const next = params.get('next');
-
-                    if (next) {
-                        window.location.href = next.includes('token=') ? next: `${next}?token=${result.token}`;
-                    } else {
-                        window.location.href = `/?token=${result.token}`;
-                    }
+                    window.location.href = `/signin?next=/`;
                 } else {
                     document.getElementById('errorContainer').innerText = result.error;
                 }

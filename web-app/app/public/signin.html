@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Bank App</title>
+</head>
+<body>
+    <h1>Sign In</h1>
+    <div>
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="guest">
+    </div>
+    <div>
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="guest">
+    </div>
+    <button type="submit" onclick="signin()">Sign In</button>
+    <div id="errorContainer"></div>
+    <script>
+        async function signin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+    
+            try {
+                const response = await fetch('/signin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    const params = new URLSearchParams(window.location.search);
+                    const next = params.get('next');
+
+                    if (next) {
+                        window.location.href = next.includes('token=') ? next: `${next}?token=${result.token}`;
+                    } else {
+                        window.location.href = `/?token=${result.token}`;
+                    }
+                } else {
+                    document.getElementById('errorContainer').innerText = result.error;
+                }
+            } catch (error) {
+                if (error) {
+                    document.getElementById('errorContainer').innerText = error;
+                    return;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
