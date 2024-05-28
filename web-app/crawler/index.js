@@ -10,11 +10,11 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD; 
 const APP_URL = process.env.APP_URL;
 
-const crawl = async (path, ID) => {
+const crawlOpenRedirect = async (path, ID) => {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   try {
-    // (If you set `login?next=/` as path in Report page, admin accesses `http://localhost:22355/login?next=/` here.)
+    // (If you set `signin?next=/` as path in Report page, admin accesses `http://localhost:22355/signin?next=/` here.)
     const targetURL = APP_URL + path;
     console.log("target url:", targetURL);
     await page.goto(targetURL, {
@@ -48,9 +48,16 @@ const crawl = async (path, ID) => {
     await connection
       .blpop("query", 0)
       .then((v) => {
-        const path = v[1];
-        console.log("crawl", ID, path);
-        return crawl(path, ID);
+        const query = JSON.parse(v[1]);
+        console.log("crawl", ID, query);
+        const type = query.type;
+  
+        if(type === "open-redirect") {
+          const path = query.path;
+          return crawlOpenRedirect(path, ID);
+        } else if(type == "csrf") {
+          // TODO: CSRF crawl
+        }
       })
       .then(() => {
         console.log("crawl", ID, "finished");

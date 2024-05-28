@@ -180,10 +180,12 @@ app.post("/report/open-redirect", async (req, res, next) => {
   if (!path || path === "") {
     res.status(400).json({ error: 'Invalid request' });
   }
+  let query = {"type": "open-redirect", "path": path};
+  query = JSON.stringify(query);
   try {
     // Enqueued jobs are processed by crawl.js
     redisClient
-      .rpush("query", path)
+      .rpush("query", query)
       .then(() => {
         redisClient.incr("queued_count");
       })
