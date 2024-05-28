@@ -11,7 +11,13 @@
     <p>例えば、<code>signin?next=/</code>を送信すると<code>admin</code>が<code>http://localhost:22355/signin?next=/</code>にアクセスし、ログインを行います。</p>
     <input type="text" id="path" placeholder="signin?next=/">
     <button onclick="reportOpenRedirect()">Report</button>
-    <div id="messageContainer"></div>
+    <div id="openRedirectMessageContainer"></div>
+
+    <h2>CSRF</h2>
+    <p>CSRFの脆弱性を報告してください。HTMLの内容を送信すると<code>admin</code>がそのHTMLを読み込みます。</p>
+    <textarea id="csrfHtml" placeholder="HTML content"></textarea>
+    <button onclick="reportCSRF()">Report</button>
+    <div id="csrfMessageContainer"></div>
     <script>
         async function reportOpenRedirect() {
             const path = document.getElementById('path').value;
@@ -24,9 +30,26 @@
             });
             const result = await response.json();
             if (response.ok) {
-                document.getElementById('messageContainer').innerText = result.message;
+                document.getElementById('openRedirectMessageContainer').innerText = result.message;
             } else {
-                document.getElementById('messageContainer').innerText = result.error;
+                document.getElementById('openRedirectMessageContainer').innerText = result.error;
+            }
+        }
+
+        async function reportCSRF() {
+            const html = document.getElementById('csrfHtml').value;
+            const response = await fetch('/report/csrf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ html })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                document.getElementById('csrfMessageContainer').innerText = result.message;
+            } else {
+                document.getElementById('csrfMessageContainer').innerText = result.error;
             }
         }
     </script>

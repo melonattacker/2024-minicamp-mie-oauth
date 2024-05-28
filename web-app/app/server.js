@@ -3,6 +3,7 @@ const session = require('express-session');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const crypto = require('crypto');
+const htmlValidator = require('html-validator');
 
 const app = express();
 app.use(express.json());
@@ -109,6 +110,7 @@ app.post('/transfer', verifyToken, (req, res) => {
     return res.status(400).json({ error: 'invalid destination user' });
   }
 
+
   user.amount -= amount;
   users[dest].amount += amount;
   res.status(200).json({ message: 'Transfer successful' });
@@ -183,6 +185,39 @@ app.post("/report/open-redirect", async (req, res, next) => {
   let query = {"type": "open-redirect", "path": path};
   query = JSON.stringify(query);
   try {
+    // Enqueued jobs are processed by crawl.js
+    redisClient
+      .rpush("query", query)
+      .then(() => {
+        redisClient.incr("queued_count");
+      })
+      .then(() => {
+        console.log("Report enqueued :", path);
+        res.status(200).json({ message: 'OK. Admin will check the URL you sent.' });
+      });
+  } catch (e) {
+    console.log("Report error :", e);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post("/report/csrf", async (req, res, next) => {
+  // Parameter check
+  const { html } = req.body;
+  if (!html || html === "") {
+    res.status(400).json({ error: 'Invalid request' });
+  }
+  let query = {"type": "csrf", "html": html};
+  query = JSON.stringify(query);
+  try {
+    // validate HTML content
+    const validationResults = await htmlValidator({ data: html, isFragment: true });
+    console.log(validationResults);
+
+    if (validationResults.messages && validationResults.messages.length > 0) {
+      return res.status(400).json({ error: 'Invalid HTML content' });
+    }
+
     // Enqueued jobs are processed by crawl.js
     redisClient
       .rpush("query", query)

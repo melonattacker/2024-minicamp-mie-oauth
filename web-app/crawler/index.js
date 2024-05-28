@@ -37,6 +37,37 @@ const crawlOpenRedirect = async (path, ID) => {
   }
 };
 
+const crawlCSRF = async (html, ID) => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  try {
+    const loginURL = APP_URL + 'signin';
+    console.log("login url:", loginURL);
+    await page.goto(loginURL, {
+      waitUntil: "domcontentloaded",
+      timeout: 3000,
+    });
+    await page.waitForSelector("input[id=username]");
+    await page.type("input[id=username]", ADMIN_USERNAME);
+    await page.type("input[id=password]", ADMIN_PASSWORD);
+    await page.click("button[type=submit]");
+
+    await page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+
+    console.log("logged in as admin");
+    
+    await page.setContent(html, { waitUntil: 'domcontentloaded' });
+    console.log("HTML content set");
+
+    await page.waitForTimeout(1000);
+  } catch (err) {
+    console.error("crawl", ID, err.message);
+  } finally {
+    await browser.close();
+    console.log("crawl", ID, "browser closed");
+  }
+};
+
 (async () => {
   while (true) {
     console.log(
@@ -56,7 +87,8 @@ const crawlOpenRedirect = async (path, ID) => {
           const path = query.path;
           return crawlOpenRedirect(path, ID);
         } else if(type == "csrf") {
-          // TODO: CSRF crawl
+          const html = query.html;
+          return crawlCSRF(html, ID);
         }
       })
       .then(() => {
