@@ -174,7 +174,7 @@ app.get("/report", async (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'report.html'));
 });
 
-app.post("/report", async (req, res, next) => {
+app.post("/report/open-redirect", async (req, res, next) => {
   // Parameter check
   const { path } = req.body;
   if (!path || path === "") {

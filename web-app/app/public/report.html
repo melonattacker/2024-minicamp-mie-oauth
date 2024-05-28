@@ -5,16 +5,17 @@
     <title>Simple Bank App</title>
 </head>
 <body>
-    <h1>Web App - Report</h1>
-    <p>ログイン機能の脆弱性を見つけたら報告してください。</p>
-    <p>例えば、<code>login?next=/</code>を送信すると<code>admin</code>が<code>http://localhost:22355/login?next=/</code>にアクセスし、ログインを行います。</p>
-    <input type="text" id="path" placeholder="login?next=/">
-    <button onclick="report()">Report</button>
+    <h1>Report</h1>
+    <h2>Open Redirect</h2>
+    <p>ログイン機能におけるオープンリダイレクトの脆弱性を見つけたら報告してください。</p>
+    <p>例えば、<code>signin?next=/</code>を送信すると<code>admin</code>が<code>http://localhost:22355/signin?next=/</code>にアクセスし、ログインを行います。</p>
+    <input type="text" id="path" placeholder="signin?next=/">
+    <button onclick="reportOpenRedirect()">Report</button>
     <div id="messageContainer"></div>
     <script>
-        async function report() {
+        async function reportOpenRedirect() {
             const path = document.getElementById('path').value;
-            const response = await fetch('/report', {
+            const response = await fetch('/report/open-redirect', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
