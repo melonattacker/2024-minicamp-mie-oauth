@@ -5,15 +5,43 @@
     <title>Simple Bank App</title>
 </head>
 <body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/transfer">Transfer</a>
+    </div>
     <h1>Home</h1>
+    <div id="meContainer"></div>
     <div id="usersContainer"></div>
+    <div id="messageContainer"></div>
     <div id="errorContainer"></div>
     <script>
         document.addEventListener('DOMContentLoaded', async() => {
             const token = new URLSearchParams(window.location.search).get('token');
             if (!token && !localStorage.getItem('token')) {
-                document.getElementById('flagContainer').innerHTML = "<p>No token provided. You need to <a href='/signin?next=/'>signin</a> .</p>";
+                document.getElementById('messageContainer').innerHTML = "<p>No token provided. You need to <a href='/signin?next=/'>signin</a> or <a href='/signup'>signup</a> .</p>";
                 return;
+            }
+
+            // ログイン状態か確認
+            let meResult;
+            try {
+                const meResponse = await fetch('/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token || localStorage.getItem('token')}`
+                    }
+                });
+                meResult = await meResponse.json();
+
+                if(!meResponse.ok) {
+                    document.getElementById('messageContainer').innerHTML = "<p>No token provided. You need to <a href='/signin?next=/'>signin</a> or <a href='/signup'>signup</a> .</p>";
+                    return;
+                }
+
+                // ユーザー名の表示
+                document.getElementById('meContainer').innerText = `Hi, ${meResult.username} !!`;
+
+            } catch (error) {
+                document.getElementById('errorContainer').innerText = 'Error fetching me.';
             }
             
             if (token) {
@@ -36,7 +64,8 @@
                 document.getElementById('usersContainer').appendChild(userList);
 
             } catch (error) {
-                document.getElementById('flagContainer').innerText = 'Error fetching flag.';
+                console.log(error);
+                document.getElementById('errorContainer').innerText = 'Error fetching users.';
             }
         });
     </script>

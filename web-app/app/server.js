@@ -124,6 +124,12 @@ app.get('/user/:username', (req, res) => {
   res.status(200).json({ username: req.params.username, amount: user.amount });
 });
 
+// 自身のユーザー情報取得機能
+app.get('/me', verifyToken, (req, res) => {
+  const user = users[req.user.username];
+  res.status(200).json({ username: req.user.username, amount: user.amount });
+});
+
 // ユーザー一覧取得機能
 app.get('/users', (req, res) => {
   const userList = Object.keys(users).map(username => ({ username, amount: users[username].amount }));
