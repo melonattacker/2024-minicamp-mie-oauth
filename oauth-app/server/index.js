@@ -100,10 +100,11 @@ app.get("/auth", (req, res) => {
     return;
   }
 
-  if (!client.redirect_uris.includes(redirectUrl.origin+redirectUrl.pathname)) {
-    res.status(400).json({ error: "invalid_request", error_description: "invalid redirect_uri" });
-    return;
-  }
+  // TODO: check redirect_uri
+  // if (!client.redirect_uris.includes(redirectUrl.origin+redirectUrl.pathname)) {
+  //   res.status(400).json({ error: "invalid_request", error_description: "invalid redirect_uri" });
+  //   return;
+  // }
 
   if (response_type !== "code") {
     res.status(400).json({ error: "invalid_request", error_description: "invalid response_type" });
@@ -222,14 +223,15 @@ app.post("/token", (req, res) => {
     return;
   }
 
-  const redirectUrl =  new URL(code.redirect_uri);
-  if (redirect_uri !== redirectUrl.origin+redirectUrl.pathname) {
-    res.status(400).json({ 
-      error: "invalid_grant",
-      error_description: "redirect_uri is wrong."
-    });
-    return;
-  }
+  // TODO: check redirect_uri
+  // const redirectUrl =  new URL(code.redirect_uri);
+  // if (redirect_uri !== redirectUrl.origin+redirectUrl.pathname) {
+  //   res.status(400).json({ 
+  //     error: "invalid_grant",
+  //     error_description: "redirect_uri is wrong."
+  //   });
+  //   return;
+  // }
 
   if (client.client_id !== code.client_id) {
     res.status(400).json({ 
