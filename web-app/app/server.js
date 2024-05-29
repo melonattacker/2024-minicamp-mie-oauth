@@ -19,7 +19,6 @@ app.use(session({
 
 const jwtSecret = crypto.randomBytes(64).toString('hex');
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const FLAG = process.env.FLAG;
 
 const users = {
   admin: { password: ADMIN_PASSWORD, isAdmin: true, amount: 100000000000000 },
@@ -137,30 +136,6 @@ app.get('/users', (req, res) => {
   const userList = Object.keys(users).map(username => ({ username, amount: users[username].amount }));
   res.status(200).json({ users: userList });
 });
-
-// フラグ取得機能
-// app.get('/', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'public', 'flag.html'));
-// });
-
-// app.get('/flag', (req, res) => {
-//   const token = req.headers.authorization?.split(' ')[1];
-//   if (!token) {
-//     return res.status(401).json({ error: 'No token provided' });
-//   }
-  
-//   try {
-//     const decoded = jwt.verify(token, jwtSecret);
-//     if (decoded.isAdmin) {
-//       const flag = FLAG;
-//       res.status(200).json({ flag });
-//     } else {
-//       res.status(403).json({ error: 'Access denied' });
-//     }
-//   } catch (error) {
-//     res.status(401).json({ error: 'Invalid token' });
-//   }
-// });
 
 // レポート機能
 // Redis
