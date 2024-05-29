@@ -84,7 +84,7 @@ function getUserById(user_id) {
 
 // Authorization Endpoint
 app.get("/auth", (req, res) => {
-  let { response_type, client_id, redirect_uri, scopes } = req.query;
+  let { response_type, client_id, redirect_uri, scopes, state } = req.query;
   const client = getClientById(client_id);
 
   if (!client) {
@@ -116,6 +116,7 @@ app.get("/auth", (req, res) => {
   req.session.client = client;
   req.session.scopes = scopes;
   req.session.redirect_uri = redirect_uri;
+  req.session.state = state;
 
   res.render("approve", { 
     client_id: client_id, 
@@ -133,6 +134,7 @@ app.post("/approve", (req, res) => {
   const client = req.session.client;
   const scopes = req.session.scopes;
   const redirect_uri = req.session.redirect_uri;
+  const state = req.session.state;
 
   req.session.destroy();
 
@@ -141,6 +143,7 @@ app.post("/approve", (req, res) => {
   if (!approved) {
     redirectUrl.searchParams.append("error", "access_denied");
     redirectUrl.searchParams.append("error_description", "The request was not approved");
+    redirectUrl.searchParams.append("state", state); // Include state in error response
     res.redirect(redirectUrl.href);
     return;
   }
@@ -149,6 +152,7 @@ app.post("/approve", (req, res) => {
   if (!user) {
     redirectUrl.searchParams.append("error", "access_denied");
     redirectUrl.searchParams.append("error_description", "End-user authentication failed");
+    redirectUrl.searchParams.append("state", state); // Include state in error response
     res.redirect(redirectUrl.href);
     return;
   }
@@ -167,6 +171,7 @@ app.post("/approve", (req, res) => {
 
   codes.set(code.value, code);
   redirectUrl.searchParams.append("code", code.value);
+  redirectUrl.searchParams.append("state", state);
   res.redirect(redirectUrl.href);
 });
 

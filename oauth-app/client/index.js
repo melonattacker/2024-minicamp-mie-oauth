@@ -27,23 +27,18 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-app.use(function(req, res, next) {
-  // CSP Setting
-  const nonce = crypto.randomBytes(8).toString("hex");
-  req.nonce = nonce; 
-  res.setHeader("Content-Security-Policy", `script-src 'nonce-${nonce}'; connect-src 'self'; base-uri 'self'; object-src 'none';`);
-  return next();
-});
-
 app.get("/", (req, res) => {
   res.render("index", { 
     username: req.session.username, 
-    scopes: req.session.scopes, 
-    nonce: req.nonce 
+    scopes: req.session.scopes
   });
 });
 
 app.get("/auth", (req, res) => {
+  // Generate and store state parameter
+  const state = crypto.randomBytes(16).toString("hex");
+  req.session.state = state;
+
   // Send Authorization Request
   console.log("SERVER_URL:", SERVER_URL);
   const authUrl = new URL(`${SERVER_URL}/auth`);
@@ -52,6 +47,7 @@ app.get("/auth", (req, res) => {
   authUrl.searchParams.append("client_id", CLIENT_ID);
   authUrl.searchParams.append("redirect_uri", `${CLIENT_URL}/callback`);
   authUrl.searchParams.append("scopes", "email profile");
+  authUrl.searchParams.append("state", state);
 
   res.redirect(authUrl.href);
 });
@@ -61,6 +57,15 @@ app.get("/callback", async(req, res) => {
     res.render("error", { error: req.query.error, error_description: req.query.error_description });
     return;
   }
+
+  // TODO: Verify state parameter
+  // if (req.query.state !== req.session.state) {
+  //   res.render("error", { error: "Invalid state parameter", error_description: "State parameter does not match" });
+  //   return;
+  // }
+
+  // Clear state parameter from session
+  delete req.session.state;
 
   // Send Access Token Request
   const params = req.query;
@@ -90,8 +95,7 @@ app.get("/callback", async(req, res) => {
 
   res.render("index", { 
     username: req.session.username, 
-    scopes: req.session.scopes, 
-    nonce: req.nonce 
+    scopes: req.session.scopes
   });
 });
 
