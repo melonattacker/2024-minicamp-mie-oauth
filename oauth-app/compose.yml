@@ -43,6 +43,7 @@ services:
     build: ./crawler
     restart: always
     environment:
+      - CLIENT_URL=http://client:3000
       - SERVER_URL=http://server:3001
       - USERNAME=admin
       - PASSWORD=admin

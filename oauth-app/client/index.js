@@ -72,19 +72,26 @@ app.get("/callback", async(req, res) => {
   params.grant_type = "authorization_code";
   params.redirect_uri = `${CLIENT_URL}/callback`;
   const tokenUrl = "http://server:3001/token";
+  const userInfoUrl = "http://server:3001/userinfo";
 
   try {
-    const response = await axios.post(tokenUrl, params, {
+    const tokenResponse = await axios.post(tokenUrl, params, {
       headers: { 
         "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": "Basic " + Buffer.from(CLIENT_ID + ":" + CLIENT_SECRET).toString("base64")
       }
     });
-    if (response.data.access_token) {
-      req.session.username = response.data.username;
-      req.session.access_token = response.data.access_token;
-      req.session.scopes = response.data.scopes;
-    }
+    req.session.access_token = tokenResponse.data.access_token;
+    req.session.scopes = tokenResponse.data.scopes;
+
+    const userInfoResponse = await axios.get(userInfoUrl, {
+      headers: { 
+        "Authorization": "Bearer " + req.session.access_token
+      }
+    });
+
+    req.session.username = userInfoResponse.data.username;
+    
   } catch(err) {
     res.render("error", { 
       error: err.response.data.error, 

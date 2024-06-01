@@ -4,13 +4,13 @@ const bodyParser = require("body-parser");
 const crypto = require("crypto");
 const logger = require("morgan");
 const { v4: uuidv4 } = require("uuid");
+const moment = require('moment-timezone');
 
 const HOST = process.env.HOST;
 const PORT = process.env.PORT;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
-const FLAG = process.env.FLAG;
 
 const app = express();
 
@@ -53,12 +53,16 @@ const users = [
   {
     user_id: uuidv4(),
     username: "admin",
-    password: ADMIN_PASSWORD
+    password: ADMIN_PASSWORD,
+    last_access_time: null,
+    last_access_ip_address: null,
   },
   {
     user_id: uuidv4(),
     username: "guest",
-    password: "guest"
+    password: "guest",
+    last_access_time: null,
+    last_access_ip_address: null,
   },
 ];
 const clients = [
@@ -81,6 +85,42 @@ function getClientById(client_id) {
 function getUserById(user_id) {
   return users.find(user => user.user_id === user_id);
 }
+
+app.get('/register', (req, res) => {
+  res.render("register");
+});
+
+// Register Endpoint
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing required fields" });
+    return;
+  }
+
+  const existingUser = users.find(user => user.username === username);
+  if (existingUser) {
+    res.status(400).json({ error: "invalid_request", error_description: "Username already taken" });
+    return;
+  }
+
+  const newUser = {
+    user_id: uuidv4(),
+    username: username,
+    password: password,
+    last_access_time: null,
+    last_access_ip_address: null,
+  };
+
+  users.push(newUser);
+
+  res.status(201).json({ 
+    user_id: newUser.user_id,
+    username: newUser.username,
+    last_access_time: newUser.last_access_time
+  });
+});
 
 // Authorization Endpoint
 app.get("/auth", (req, res) => {
@@ -266,7 +306,6 @@ app.post("/token", (req, res) => {
   }
 
   res.status(200).json({ 
-    username: user.username,
     access_token: access_token.value,
     token_type: "Bearer",
     expires_in: 3600,
@@ -274,10 +313,69 @@ app.post("/token", (req, res) => {
   });
 });
 
+// UserInfo Endpoint
+app.get("/userinfo", (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401).json({ error: "invalid_request", error_description: "Access token is missing or invalid" });
+    return;
+  }
+
+  const tokenValue = authHeader.slice(7);
+  const token = access_tokens[tokenValue];
+  if (!token) {
+    res.status(401).json({ error: "invalid_request", error_description: "Access token is invalid" });
+    return;
+  }
+
+  const now = new Date(Date.now());
+  if (now > token.expires_at) {
+    delete access_tokens[tokenValue];
+    res.status(401).json({ error: "invalid_request", error_description: "Access token has expired" });
+    return;
+  }
+
+  const user = getUserById(token.user_id);
+  if (!user) {
+    res.status(500).json({ error: "internal server error" });
+    return;
+  }
+
+  user.last_access_time = moment().tz("Asia/Tokyo").format(); // JSTで設定
+  user.last_access_ip_address = req.ip; // リクエスト送信元のIPアドレスを設定
+
+  res.status(200).json({ 
+    user_id: user.user_id,
+    username: user.username,
+    last_access_time: user.last_access_time,
+    last_access_ip_address: user.last_access_ip_address
+  });
+});
+
+
+// ユーザー情報（パスワード以外）を返すエンドポイント
+app.get("/user/:username", (req, res) => {
+  const { username } = req.params;
+  const user = users.find(user => user.username === username);
+  if (!user) {
+    res.status(404).json({ error: "not_found" });
+    return;
+  }
+
+  res.status(200).json({
+    user_id: user.user_id,
+    username: user.username,
+    last_access_time: user.last_access_time,
+    last_access_ip_address: user.last_access_ip_address
+  });
+});
+
 app.get("/report", async (req, res, next) => {
   res.render("report", {
     openRedirectSuccess: "",
-    openRedirectError: ""
+    openRedirectError: "",
+    csrfSuccess: "",
+    csrfError: ""
   });
 });
 
@@ -287,7 +385,9 @@ app.post("/report/open-redirect", async (req, res, next) => {
   if (!path || path === "") {
     return res.render("report", {
       openRedirectSuccess: "",
-      openRedirectError: "invalid parameter"
+      openRedirectError: "invalid parameter",
+      csrfSuccess: "",
+      csrfError: ""
     });
   }
   let query = {"type": "open-redirect", "path": path};
@@ -304,14 +404,59 @@ app.post("/report/open-redirect", async (req, res, next) => {
         console.log("Report enqueued :", query);
         return res.render("report", {
           openRedirectSuccess: "OK. Admin will check the URL you sent.",
-          openRedirectError: ""
+          openRedirectError: "",
+          csrfSuccess: "",
+          csrfError: ""
         });
       });
   } catch (e) {
     console.log("Report error :", e);
     return res.render("report", {
       openRedirectSuccess: "",
-      openRedirectError: "Internal error"
+      openRedirectError: "Internal error",
+      csrfSuccess: "",
+      csrfError: ""
+    });
+  }
+});
+
+app.post("/report/csrf", async (req, res, next) => {
+  // Parameter check
+  const { path } = req.body;
+  if (!path || path === "") {
+    return res.render("report", {
+      openRedirectSuccess: "",
+      openRedirectError: "",
+      csrfSuccess: "",
+      csrfError: "invalid parameter"
+    });
+  }
+  let query = {"type": "csrf", "path": path};
+  query = JSON.stringify(query);
+
+  try {
+    // Enqueued jobs are processed by crawl.js
+    redisClient
+      .rpush("query", query)
+      .then(() => {
+        redisClient.incr("queued_count");
+      })
+      .then(() => {
+        console.log("Report enqueued :", query);
+        return res.render("report", {
+          openRedirectSuccess: "",
+          openRedirectError: "",
+          csrfSuccess: "OK. Admin will check the URL you sent.",
+          csrfError: ""
+        });
+      });
+  } catch (e) {
+    console.log("Report error :", e);
+    return res.render("report", {
+      openRedirectSuccess: "",
+      openRedirectError: "",
+      csrfSuccess: "",
+      csrfError: "Internal error"
     });
   }
 });

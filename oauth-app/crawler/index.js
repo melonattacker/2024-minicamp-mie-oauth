@@ -8,6 +8,7 @@ const connection = new Redis({
 
 const USERNAME = process.env.USERNAME; // admin username
 const PASSWORD = process.env.PASSWORD; // admin password
+const CLIENT_URL = process.env.CLIENT_URL;
 const SERVER_URL = process.env.SERVER_URL;
 
 const crawlOpenRedirect = async (path, ID) => {
@@ -36,6 +37,27 @@ const crawlOpenRedirect = async (path, ID) => {
   }
 };
 
+const crawlCSRF = async(path, ID) => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  try {
+    const targetURL = CLIENT_URL + path;
+    console.log("target url:", targetURL);
+    // URLにアクセス
+    await page.goto(targetURL, {
+      waitUntil: "domcontentloaded",
+      timeout: 3000, 
+    });
+
+    await page.close();
+  } catch (err) {
+    console.error("crawl", ID, err.message);
+  } finally {
+    await browser.close();
+    console.log("crawl", ID, "browser closed");
+  }
+}
+
 (async () => {
   while (true) {
     console.log(
@@ -55,8 +77,8 @@ const crawlOpenRedirect = async (path, ID) => {
           const path = query.path;
           return crawlOpenRedirect(path, ID);
         } else if(type == "csrf") {
-          // const html = query.html;
-          // return crawlCSRF(html, ID);
+          const path = query.path;
+          return crawlCSRF(path, ID);
         }
       })
       .then(() => {

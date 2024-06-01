@@ -25,8 +25,8 @@
                 <label for="path">path:</label>
                 <input type="text" id="path" name="path" class="form-control" placeholder="path (e.g. /auth?response_type=code&...&scopes=email profile)">
             </div>
-            <p><code>/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=email profile&state=state</code>を指定すると<code>admin</code>は
-                <code>http://[IdPのドメイン]/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=email profile&state=state</code>にアクセスし、ログインを行います。</p>
+            <p><code>/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=email profile&state=state</code>を指定すると、
+                <code>http://[IdPのドメイン]/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=email profile&state=state</code>にアクセスし、<code>admin</code>としてログインを行います。</p>
             <input type="submit" class="btn btn-primary" value="Send" />
         </form>
         <% if (openRedirectSuccess !== "") { %>
@@ -34,6 +34,23 @@
         <% } %>
         <% if (openRedirectError !== "") { %>
             <p class="text-danger"><%= openRedirectError %></p>
+        <% } %>
+
+        <h2>CSRF</h2>
+        <form class="form" action="/report/csrf" method="POST">
+            <div class="form-group">
+                <label for="path">path:</label>
+                <input type="text" id="path" name="path" class="form-control" placeholder="path (e.g. /callback?code=code&state=state)">
+            </div>
+            <p><code>/callback?code=code&state=state</code>を指定すると、
+                <code>http://[clientのドメイン]/callback?code=code&state=state</code>にアクセスします。</p>
+            <input type="submit" class="btn btn-primary" value="Send" />
+        </form>
+        <% if (csrfSuccess !== "") { %>
+            <p class="text-success"><%= csrfSuccess %></p>
+        <% } %>
+        <% if (csrfError !== "") { %>
+            <p class="text-danger"><%= csrfError %></p>
         <% } %>
     </div>
 </body>
