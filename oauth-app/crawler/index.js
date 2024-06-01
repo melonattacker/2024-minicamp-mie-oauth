@@ -10,19 +10,13 @@ const USERNAME = process.env.USERNAME; // admin username
 const PASSWORD = process.env.PASSWORD; // admin password
 const SERVER_URL = process.env.SERVER_URL;
 
-const crawl = async (path, ID) => {
+const crawlOpenRedirect = async (path, ID) => {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   try {
-    const targetURL = new url.URL(SERVER_URL);
-    targetURL.pathname = "/auth";
-
-    if (query) {
-      const searchParams = new url.URLSearchParams(query);
-      targetURL.search = searchParams.toString();
-    }
+    const targetURL = SERVER_URL + path;
     console.log("target url:", targetURL);
-    await page.goto(targetURL.toString(), {
+    await page.goto(targetURL, {
         waitUntil: "domcontentloaded",
         timeout: 3000, 
     }); 
@@ -53,9 +47,17 @@ const crawl = async (path, ID) => {
     await connection
       .blpop("query", 0)
       .then((v) => {
-        const path = v[1];
-        console.log("crawl", ID, path);
-        return crawl(path, ID);
+        const query = JSON.parse(v[1]);
+        console.log("crawl", ID, query);
+        const type = query.type;
+
+        if(type === "open-redirect") {
+          const path = query.path;
+          return crawlOpenRedirect(path, ID);
+        } else if(type == "csrf") {
+          // const html = query.html;
+          // return crawlCSRF(html, ID);
+        }
       })
       .then(() => {
         console.log("crawl", ID, "finished");

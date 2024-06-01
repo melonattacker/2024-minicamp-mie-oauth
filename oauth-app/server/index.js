@@ -274,57 +274,25 @@ app.post("/token", (req, res) => {
   });
 });
 
-app.post("/flag", (req, res) => {
-  const access_token_value = req.body.access_token;
-  const access_token = access_tokens[access_token_value];
-  if (!access_token) {
-    res.status(400).json({ error: "invalid token" });
-    return;
-  }
-
-  const now = new Date(Date.now());
-  if (now > access_token.expires_at) {
-    access_tokens.delete(access_token.value);
-    res.status(400).json({ 
-      error: "The access token has expired."
-    });
-    return;
-  }
-
-  const user = getUserById(access_token.user_id);
-  if (!user) {
-    res.status(400).json({ error: "The user not found" });
-    return;
-  }
-  if (user.username === "admin") {
-    res.status(200).send(`Congratulations! Here's your flag: ${FLAG}`);
-  } else {
-    res.status(200).send("No flag for you");
-  }
-});
-
 app.get("/report", async (req, res, next) => {
   res.render("report", {
-    success: "",
-    error: ""
+    openRedirectSuccess: "",
+    openRedirectError: ""
   });
 });
 
-app.post("/report", async (req, res, next) => {
+app.post("/report/open-redirect", async (req, res, next) => {
   // Parameter check
-  if (!req.body.query) {
+  const { path } = req.body;
+  if (!path || path === "") {
     return res.render("report", {
-      success: "",
-      error: "invalid parameter"
+      openRedirectSuccess: "",
+      openRedirectError: "invalid parameter"
     });
   }
-  const query = req.body.query.toString();
-  if (query === "") {
-    return res.render("report", {
-      success: "",
-      error: "Please set query."
-    });
-  }
+  let query = {"type": "open-redirect", "path": path};
+  query = JSON.stringify(query);
+
   try {
     // Enqueued jobs are processed by crawl.js
     redisClient
@@ -335,19 +303,18 @@ app.post("/report", async (req, res, next) => {
       .then(() => {
         console.log("Report enqueued :", query);
         return res.render("report", {
-          success: "OK. Admin will check the URL you sent.",
-          error: ""
+          openRedirectSuccess: "OK. Admin will check the URL you sent.",
+          openRedirectError: ""
         });
       });
   } catch (e) {
     console.log("Report error :", e);
     return res.render("report", {
-      success: "",
-      error: "Internal error"
+      openRedirectSuccess: "",
+      openRedirectError: "Internal error"
     });
   }
 });
-
 
 app.listen(PORT, HOST, () => {
   console.log(`OAuth server listening at http://${HOST}:${PORT}`);

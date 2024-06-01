@@ -99,31 +99,6 @@ app.get("/callback", async(req, res) => {
   });
 });
 
-app.get("/flag", async(req, res) => {
-  if (!req.session.access_token) {
-    res.render(
-      "error", { 
-        error: "you are not logged in", 
-        error_description: ""
-    });
-    return;
-  }
-  const flagUrl = "http://server:3001/flag";
-  const params = new URLSearchParams();
-  params.append("access_token", req.session.access_token);
-  try {
-    const response = await axios.post(flagUrl, params, {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" }
-    });
-    res.send(response.data);
-  } catch(err) {
-    res.render("error", { 
-      error: err.response.data.error, 
-      error_description: "" 
-    });
-  }
-});
-
 app.post("/logout", async(req, res) => {
   req.session.destroy();
   res.redirect("/");

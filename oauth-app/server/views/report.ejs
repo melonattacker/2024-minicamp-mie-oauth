@@ -18,21 +18,22 @@
         <h1><a href="/">OAuth Authorization Server</a></h1>
     </div>
     <div class="container">
-        <h2>Report</h2>
-        <form class="form" action="/report" method="POST">
+        <h1>Report</h1>
+        <h2>Open Redirect</h2>
+        <form class="form" action="/report/open-redirect" method="POST">
             <div class="form-group">
-                <label for="query">query:</label>
-                <input type="text" id="query" name="query" class="form-control" placeholder="query (e.g. ?response_type=code&...&scopes=email profile)">
+                <label for="path">path:</label>
+                <input type="text" id="path" name="path" class="form-control" placeholder="path (e.g. /auth?response_type=code&...&scopes=email profile)">
             </div>
-            <p>If you set <code>?response_type=code&...&scopes=email profile</code> as path, admin will check
-                <code>https://oooauth.beginners.seccon.games:3001/auth?response_type=code&...&scopes=email profile</code></p>
+            <p><code>/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=email profile&state=state</code>を指定すると<code>admin</code>は
+                <code>http://[IdPのドメイン]/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=email profile&state=state</code>にアクセスし、ログインを行います。</p>
             <input type="submit" class="btn btn-primary" value="Send" />
         </form>
-        <% if (success !== "") { %>
-            <p class="text-success"><%= success %></p>
+        <% if (openRedirectSuccess !== "") { %>
+            <p class="text-success"><%= openRedirectSuccess %></p>
         <% } %>
-        <% if (error !== "") { %>
-            <p class="text-danger"><%= error %></p>
+        <% if (openRedirectError !== "") { %>
+            <p class="text-danger"><%= openRedirectError %></p>
         <% } %>
     </div>
 </body>
