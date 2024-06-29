@@ -19,9 +19,9 @@ const crawlOpenRedirect = async (path, ID) => {
     console.log("target url:", targetURL);
     await page.goto(targetURL, {
         waitUntil: "domcontentloaded",
-        timeout: 3000, 
+        timeout: 1000, 
     }); 
-    await page.waitForSelector("input[name=username]");
+    await page.waitForSelector("input[name=username]", { timeout: 1000 });
     await page.type("input[name=username]", USERNAME);
     await page.type("input[name=password]", PASSWORD);
     await page.click("input[name=approved]");
@@ -46,7 +46,7 @@ const crawlCSRF = async(path, ID) => {
     // URLにアクセス
     await page.goto(targetURL, {
       waitUntil: "domcontentloaded",
-      timeout: 3000, 
+      timeout: 1000, 
     });
 
     await page.close();

@@ -3,26 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <title>Simple Bank App</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <!-- Optional: Including Bootstrap's theme for better aesthetics -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <style>
+        body {
+            font-size: 18px; /* フォントサイズを大きく */
+        }
+        .card {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 <body>
-    <div class="navbar">
-        <a href="/">Home</a>
-        <a href="/transfer">Transfer</a>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="/">Simple Bank App</a>
+            </div>
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="/">Home</a></li>
+                <li><a href="/transfer">Transfer</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>Home</h1>
+        <div id="meContainer" class="card"></div>
+        <div id="usersContainer" class="row"></div> <!-- Updated class for grid layout -->
+        <div id="messageContainer"></div>
+        <div id="errorContainer" class="text-danger"></div>
     </div>
-    <h1>Home</h1>
-    <div id="meContainer"></div>
-    <div id="usersContainer"></div>
-    <div id="messageContainer"></div>
-    <div id="errorContainer"></div>
     <script>
-        document.addEventListener('DOMContentLoaded', async() => {
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, function(tag) {
+                const charsToReplace = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                };
+                return charsToReplace[tag] || tag;
+            });
+        }
+        document.addEventListener('DOMContentLoaded', async () => {
             const token = new URLSearchParams(window.location.search).get('token');
             if (!token && !localStorage.getItem('token')) {
                 document.getElementById('messageContainer').innerHTML = "<p>No token provided. You need to <a href='/signin?next=/'>signin</a> or <a href='/signup'>signup</a> .</p>";
                 return;
             }
 
-            // ログイン状態か確認
             let meResult;
             try {
                 const meResponse = await fetch('/me', {
@@ -32,13 +66,12 @@
                 });
                 meResult = await meResponse.json();
 
-                if(!meResponse.ok) {
+                if (!meResponse.ok) {
                     document.getElementById('messageContainer').innerHTML = "<p>No token provided. You need to <a href='/signin?next=/'>signin</a> or <a href='/signup'>signup</a> .</p>";
                     return;
                 }
 
-                // ユーザー名の表示
-                document.getElementById('meContainer').innerText = `Hi, ${meResult.username} !!`;
+                document.getElementById('meContainer').innerHTML = `<h2>Welcome, ${escapeHTML(meResult.username)}!</h2>`;
 
             } catch (error) {
                 document.getElementById('errorContainer').innerText = 'Error fetching me.';
@@ -49,19 +82,23 @@
             }
 
             try {
-                // ユーザー一覧の取得
                 const response = await fetch('/users');
                 const result = await response.json();
                 const users = result.users;
 
-                const userList = document.createElement('ul');
                 users.forEach(user => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `Username: ${user.username}, Amount: ${user.amount}`;
-                    userList.appendChild(listItem);
+                    const userCard = document.createElement('div');
+                    userCard.className = 'col-sm-4';
+                    userCard.innerHTML = `
+                        <div class="panel panel-default">
+                            <div class="panel-heading">${escapeHTML(user.username)}</div>
+                            <div class="panel-body">
+                                Amount: ${escapeHTML(user.amount.toString())}
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('usersContainer').appendChild(userCard);
                 });
-
-                document.getElementById('usersContainer').appendChild(userList);
 
             } catch (error) {
                 console.log(error);

@@ -3,27 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <title>Simple Bank App</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <style>
+        body {
+            font-size: 18px; /* フォントサイズを大きく */
+        }
+    </style>
 </head>
 <body>
-    <h1>Transfer Money</h1>
-    <div>
-        <label for="dest">Destination (Username)</label>
-        <input type="text" id="dest" placeholder="guest">
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="/">Simple Bank App</a>
+            </div>
+            <ul class="nav navbar-nav">
+                <li><a href="/">Home</a></li>
+                <li class="active"><a href="/transfer">Transfer</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>Transfer Money</h1>
+        <form onsubmit="transfer(); return false;">
+            <div class="form-group">
+                <label for="dest">Destination (Username)</label>
+                <input type="text" class="form-control" id="dest" placeholder="guest">
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount</label>
+                <input type="text" class="form-control" id="amount" placeholder="10">
+            </div>
+            <button type="submit" class="btn btn-primary">Transfer</button>
+        </form>
+        <div id="messageContainer" class="text-success"></div>
+        <div id="errorContainer" class="text-danger"></div>
     </div>
-    <div>
-        <label for="amount">Amount</label>
-        <input type="text" id="amount" placeholder="10">
-    </div>
-    <button type="submit" onclick="transfer()">Transfer</button>
-    <div id="messageContainer"></div>
-    <div id="errorContainer"></div>
     <script>
         async function transfer() {
             const dest = document.getElementById('dest').value;
             const amount = document.getElementById('amount').value;
             document.getElementById('dest').value = '';
             document.getElementById('amount').value = '';
-    
+
             try {
                 const response = await fetch('/transfer', {
                     method: 'POST',
