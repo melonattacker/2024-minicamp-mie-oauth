@@ -7,19 +7,24 @@
         body {
             font-size: 18px; /* フォントサイズを大きく */
         }
+        textarea {
+            width: 100%; /* 幅を100%に */
+            height: 200px; /* 高さを200pxに */
+        }
     </style>
 </head>
 <body>
     <h1>Report</h1>
     <h2>Open Redirect</h2>
-    <p>ログイン機能におけるオープンリダイレクトの脆弱性を見つけたら報告してください。</p>
-    <p>例えば、<code>signin?next=/</code>を送信すると<code>admin</code>が<code>http://localhost:22355/signin?next=/</code>にアクセスし、ログインを行います。</p>
+    <p>ログイン機能におけるオープンリダイレクトの脆弱性を検証するためのクローラーです。</p>
+    <p>例えば、<code>signin?next=/</code>を送信すると<code>admin</code>ユーザーが<code>http://localhost:22355/signin?next=/</code>にアクセスし、ログインを行います。</p>
     <input type="text" id="path" placeholder="signin?next=/">
     <button onclick="reportOpenRedirect()">Report</button>
     <div id="openRedirectMessageContainer"></div>
 
     <h2>CSRF</h2>
-    <p>CSRFの脆弱性を報告してください。HTMLの内容を送信すると<code>admin</code>がそのHTMLを読み込みます。</p>
+    <p>CSRFの脆弱性を検証するためのクローラーです。</p>
+    <p>HTMLの内容を送信すると<code>admin</code>がそのHTMLを読み込みます。</p>
     <textarea id="csrfHtml" placeholder="HTML content"></textarea>
     <button onclick="reportCSRF()">Report</button>
     <div id="csrfMessageContainer"></div>

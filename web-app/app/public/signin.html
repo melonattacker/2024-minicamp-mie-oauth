@@ -49,7 +49,7 @@
                     const next = params.get('next');
 
                     if (next) {
-                        window.location.href = next.includes('token=') ? next : `${next}?token=${result.token}`;
+                        window.location.href = `${next}?token=${result.token}`;
                     } else {
                         window.location.href = `/?token=${result.token}`;
                     }

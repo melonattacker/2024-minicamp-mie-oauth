@@ -56,7 +56,7 @@ const crawlCSRF = async (html, ID) => {
 
     console.log("logged in as admin");
     
-    await page.setContent(html, { waitUntil: 'domcontentloaded' });
+    await page.setContent(html, { waitUntil: 'domcontentloaded' }); // APP_URLのページでHTMLを表示
     console.log("HTML content set");
 
     await page.waitForTimeout(1000);
