@@ -4,44 +4,93 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>OAuth Client</title>
-
+    <title>画像閲覧アプリ</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-	  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <style>
+      .img-container {
+        overflow: hidden;
+        height: 200px; /* 画像の高さを指定 */
+      }
+      .img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* 画像のサイズを調整 */
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
     <div>
       <div class="container">
-        <h1><a href="/">OAuth Client</a></h1>
+        <h1><a href="/">画像閲覧アプリ</a></h1>
       </div>
       <div class="container">
         <div class="jumbotron">
           <% if(username) { %>
-            <p>Logged in as: <%= username %></p>
+            <p>ユーザー: <%= username %></p>
           <% } else { %>
-            <p>You are not logged in</p>
+            <p>リソースサーバの画像を閲覧しよう！</p>
           <% }; %>
           
           <% if(scopes) { %>
-            <p>Your Permissions:</p>
+            <p>アクセストークンの権限:</p>
             <ul>
-                <% scopes.forEach(function(scope) { %>
-                    <li><%= scope %></li>
-                <% }); %>
+              <% scopes.forEach(function(scope) { %>
+                <li><%= scope %></li>
+              <% }); %>
             </ul>
           <% }; %>
-          
-          <a type="button" class="btn btn-primary" href="/auth">Login</a>
+
+          <a type="button" class="btn btn-primary" href="/auth">画像を閲覧</a>
           
           <div style="display:inline-flex">
             <form class="form" action="/logout" method="POST">
-              <input type="submit" class="btn btn-primary" value="Logout" />
+              <input type="submit" class="btn btn-primary" value="ログアウト" />
             </form>
           </div>
         </div>
+        
+        <!-- ここから画像表示 -->
+        <% if(images.length !== 0) { %>
+          <h2>ギャラリー</h2>
+          <div class="row">
+            <% images.forEach(function(image, index) { %>
+              <div class="col-md-4 img-container">
+                <img src="data:image/png;base64,<%= image %>" class="img-responsive" alt="Image" data-toggle="modal" data-target="#imageModal<%= index %>">
+              </div>
+
+              <!-- Modal -->
+              <div class="modal fade" id="imageModal<%= index %>" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel<%= index %>">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                      <h4 class="modal-title" id="imageModalLabel<%= index %>">画像</h4>
+                    </div>
+                    <div class="modal-body">
+                      <img src="data:image/png;base64,<%= image %>" class="img-responsive" alt="Image">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% }; %>
+        <!-- ここまで画像表示 -->
+        
       </div>
     </div>
+
+    <script>
+      $(document).ready(function() {
+        $('.img-container img').click(function() {
+          var src = $(this).attr('src');
+          $('#imageModal img').attr('src', src);
+          $('#imageModal').modal('show');
+        });
+      });
+    </script>
   </body>
 </html>

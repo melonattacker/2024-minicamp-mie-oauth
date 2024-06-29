@@ -30,7 +30,8 @@ app.use(session({
 app.get("/", (req, res) => {
   res.render("index", { 
     username: req.session.username, 
-    scopes: req.session.scopes
+    scopes: req.session.scopes,
+    images: []
   });
 });
 
@@ -46,7 +47,7 @@ app.get("/auth", (req, res) => {
   authUrl.searchParams.append("response_type", "code"); // Use Authrozation Code Grant
   authUrl.searchParams.append("client_id", CLIENT_ID);
   authUrl.searchParams.append("redirect_uri", `${CLIENT_URL}/callback`);
-  authUrl.searchParams.append("scopes", "email profile");
+  authUrl.searchParams.append("scopes", "image profile");
   authUrl.searchParams.append("state", state);
 
   res.redirect(authUrl.href);
@@ -72,7 +73,7 @@ app.get("/callback", async(req, res) => {
   params.grant_type = "authorization_code";
   params.redirect_uri = `${CLIENT_URL}/callback`;
   const tokenUrl = "http://server:3001/token";
-  const userInfoUrl = "http://server:3001/userinfo";
+  const imageUrl = "http://server:3001/images";
 
   try {
     const tokenResponse = await axios.post(tokenUrl, params, {
@@ -84,13 +85,20 @@ app.get("/callback", async(req, res) => {
     req.session.access_token = tokenResponse.data.access_token;
     req.session.scopes = tokenResponse.data.scopes;
 
-    const userInfoResponse = await axios.get(userInfoUrl, {
+    const imageResponse = await axios.get(imageUrl, {
       headers: { 
         "Authorization": "Bearer " + req.session.access_token
       }
     });
 
-    req.session.username = userInfoResponse.data.username;
+    req.session.username = imageResponse.data.username;
+
+    res.render("index", { 
+      username: req.session.username, 
+      scopes: req.session.scopes,
+      images: imageResponse.data.images
+    });
+    return;
     
   } catch(err) {
     res.render("error", { 
@@ -99,11 +107,6 @@ app.get("/callback", async(req, res) => {
     });
     return;
   }
-
-  res.render("index", { 
-    username: req.session.username, 
-    scopes: req.session.scopes
-  });
 });
 
 app.post("/logout", async(req, res) => {

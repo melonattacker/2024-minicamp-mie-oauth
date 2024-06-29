@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require('fs');
 const express = require("express");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
@@ -56,6 +57,14 @@ const users = [
     password: ADMIN_PASSWORD,
     last_access_time: null,
     last_access_ip_address: null,
+    images: [
+      "/images/ramen1.jpg",
+      "/images/ramen2.jpg",
+      "/images/ramen3.jpg",
+      "/images/ramen4.jpg",
+      "/images/ramen5.jpg",
+      "/images/ramen6.jpg",
+    ]
   },
   {
     user_id: uuidv4(),
@@ -63,6 +72,14 @@ const users = [
     password: "guest",
     last_access_time: null,
     last_access_ip_address: null,
+    images: [
+      "/images/animal1.jpg",
+      "/images/animal2.jpg",
+      "/images/animal3.jpg",
+      "/images/animal4.jpg",
+      "/images/animal5.jpg",
+      "/images/animal6.jpg",
+    ]
   },
 ];
 const clients = [
@@ -70,7 +87,7 @@ const clients = [
     client_id: "oauth-client",
     client_secret: CLIENT_SECRET,
     redirect_uris: [`${CLIENT_URL}/callback`],
-    scopes: ["email", "profile"]
+    scopes: ["image", "profile"]
   }
 ];
 
@@ -313,8 +330,8 @@ app.post("/token", (req, res) => {
   });
 });
 
-// UserInfo Endpoint
-app.get("/userinfo", (req, res) => {
+// 画像を返すエンドポイント
+app.get("/images", (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     res.status(401).json({ error: "invalid_request", error_description: "Access token is missing or invalid" });
@@ -341,6 +358,16 @@ app.get("/userinfo", (req, res) => {
     return;
   }
 
+  // 画像をbase64エンコードして返す
+  const images = user.images;
+  const imageBase64s = [];
+  for (let i = 0; i < images.length; i++) {
+    const image = images[i];
+    // ファイル読み込み
+    const imageBase64 = fs.readFileSync(__dirname + image, 'base64');
+    imageBase64s.push(imageBase64);
+  }
+
   user.last_access_time = moment().tz("Asia/Tokyo").format(); // JSTで設定
   user.last_access_ip_address = req.ip; // リクエスト送信元のIPアドレスを設定
 
@@ -348,7 +375,8 @@ app.get("/userinfo", (req, res) => {
     user_id: user.user_id,
     username: user.username,
     last_access_time: user.last_access_time,
-    last_access_ip_address: user.last_access_ip_address
+    last_access_ip_address: user.last_access_ip_address,
+    images: imageBase64s
   });
 });
 

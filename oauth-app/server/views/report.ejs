@@ -23,10 +23,10 @@
         <form class="form" action="/report/open-redirect" method="POST">
             <div class="form-group">
                 <label for="path">path:</label>
-                <input type="text" id="path" name="path" class="form-control" placeholder="path (e.g. /auth?response_type=code&...&scopes=email profile)">
+                <input type="text" id="path" name="path" class="form-control" placeholder="path (e.g. /auth?response_type=code&...&scopes=image profile)">
             </div>
-            <p><code>/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=email profile&state=state</code>を指定すると、
-                <code>http://[IdPのドメイン]/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=email profile&state=state</code>にアクセスし、<code>admin</code>としてログインを行います。</p>
+            <p><code>/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=image profile&state=state</code>を指定すると、
+                <code>http://[IdPのドメイン]/auth?response_type=code&client_id=oauth-client&redirect_uri=http://localhost:3000/callback&scopes=image profile&state=state</code>にアクセスし、<code>admin</code>としてログインを行います。</p>
             <input type="submit" class="btn btn-primary" value="Send" />
         </form>
         <% if (openRedirectSuccess !== "") { %>
