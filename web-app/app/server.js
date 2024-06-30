@@ -154,8 +154,8 @@ app.get("/report", async (req, res) => {
 app.post("/report/open-redirect", async (req, res, next) => {
   // Parameter check
   const { path } = req.body;
-  if (!path || path === "") {
-    res.status(400).json({ error: 'Invalid request' });
+  if (!path || path === "" || path.indexOf("signin") === -1) {
+    return res.status(400).json({ error: 'Invalid request' });
   }
   let query = {"type": "open-redirect", "path": path};
   query = JSON.stringify(query);
@@ -180,14 +180,13 @@ app.post("/report/csrf", async (req, res, next) => {
   // Parameter check
   const { html } = req.body;
   if (!html || html === "") {
-    res.status(400).json({ error: 'Invalid request' });
+    return res.status(400).json({ error: 'Invalid request' });
   }
   let query = {"type": "csrf", "html": html};
   query = JSON.stringify(query);
   try {
     // validate HTML content
     const validationResults = await htmlValidator({ data: html, isFragment: true });
-    console.log(validationResults);
 
     if (validationResults.messages && validationResults.messages.length > 0) {
       return res.status(400).json({ error: 'Invalid HTML content' });
