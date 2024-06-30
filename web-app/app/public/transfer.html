@@ -52,7 +52,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
-                    body: JSON.stringify({ dest, amount })
+                    body: JSON.stringify({ dest: dest, amount: amount })
                 });
                 const result = await response.json();
 
