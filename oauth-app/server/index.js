@@ -55,8 +55,7 @@ const users = [
     user_id: uuidv4(),
     username: "admin",
     password: ADMIN_PASSWORD,
-    last_access_time: null,
-    last_access_ip_address: null,
+    access_log: [],
     images: [
       "/images/ramen1.jpg",
       "/images/ramen2.jpg",
@@ -70,7 +69,7 @@ const users = [
     user_id: uuidv4(),
     username: "guest",
     password: "guest",
-    last_access_time: null,
+    access_log: [],
     last_access_ip_address: null,
     images: [
       "/images/animal1.jpg",
@@ -122,12 +121,24 @@ app.post("/register", async (req, res) => {
     return;
   }
 
+  // 画像はランダムに選択
+  // /image/ramen{1-6}, /image/animal{1-6}のいずれかから必ず6枚を取得
+  // 重複はなし
+  const images = [];
+  const imageDir = __dirname + "/images";
+  const ramenImages = fs.readdirSync(imageDir).filter(file => file.startsWith("ramen"));
+  const animalImages = fs.readdirSync(imageDir).filter(file => file.startsWith("animal"));
+  const randomRamenImages = ramenImages.sort(() => Math.random() - 0.5).slice(0, 3);
+  const randomAnimalImages = animalImages.sort(() => Math.random() - 0.5).slice(0, 3);
+  images.push(...randomRamenImages.map(image => `/images/${image}`));
+  images.push(...randomAnimalImages.map(image => `/images/${image}`));
+
   const newUser = {
     user_id: uuidv4(),
     username: username,
     password: password,
-    last_access_time: null,
-    last_access_ip_address: null,
+    access_log: [],
+    images: images
   };
 
   users.push(newUser);
@@ -135,7 +146,7 @@ app.post("/register", async (req, res) => {
   res.status(201).json({ 
     user_id: newUser.user_id,
     username: newUser.username,
-    last_access_time: newUser.last_access_time
+    access_log: [],
   });
 });
 
@@ -368,14 +379,15 @@ app.get("/images", (req, res) => {
     imageBase64s.push(imageBase64);
   }
 
-  user.last_access_time = moment().tz("Asia/Tokyo").format(); // JSTで設定
-  user.last_access_ip_address = req.ip; // リクエスト送信元のIPアドレスを設定
+
+  const access_time = moment().tz("Asia/Tokyo").format(); // JSTで設定
+  const access_ip_address = req.ip; // リクエスト送信元のIPアドレスを設定
+  user.access_log.push({ access_time, access_ip_address });
 
   res.status(200).json({ 
     user_id: user.user_id,
     username: user.username,
-    last_access_time: user.last_access_time,
-    last_access_ip_address: user.last_access_ip_address,
+    access_log: user.access_log,
     images: imageBase64s
   });
 });
@@ -393,8 +405,7 @@ app.get("/user/:username", (req, res) => {
   res.status(200).json({
     user_id: user.user_id,
     username: user.username,
-    last_access_time: user.last_access_time,
-    last_access_ip_address: user.last_access_ip_address
+    access_log: user.access_log,
   });
 });
 
