@@ -1,5 +1,5 @@
 services:
-  app:
+  webapp:
     build: ./app
     environment:
       - REDIS_HOST=redis
@@ -10,7 +10,7 @@ services:
     ports:
       - 22355:80
     depends_on:
-      - app
+      - webapp
     restart: always
   redis:
     image: redis:7-alpine
@@ -23,7 +23,7 @@ services:
     build: ./crawler
     restart: always
     environment:
-      - APP_URL=http://app:22355/
+      - APP_URL=http://webapp:22355/
       - ADMIN_USERNAME=admin
       - ADMIN_PASSWORD=admin
       - REDIS_HOST=redis

@@ -3,7 +3,6 @@ const session = require('express-session');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const crypto = require('crypto');
-const htmlValidator = require('html-validator');
 
 const app = express();
 app.use(express.json());
@@ -185,13 +184,6 @@ app.post("/report/csrf", async (req, res, next) => {
   let query = {"type": "csrf", "html": html};
   query = JSON.stringify(query);
   try {
-    // validate HTML content
-    const validationResults = await htmlValidator({ data: html, isFragment: true });
-
-    if (validationResults.messages && validationResults.messages.length > 0) {
-      return res.status(400).json({ error: 'Invalid HTML content' });
-    }
-
     // Enqueued jobs are processed by crawl.js
     redisClient
       .rpush("query", query)
@@ -199,7 +191,7 @@ app.post("/report/csrf", async (req, res, next) => {
         redisClient.incr("queued_count");
       })
       .then(() => {
-        console.log("Report enqueued :", path);
+        console.log("Report enqueued");
         res.status(200).json({ message: 'OK. Admin will check the URL you sent.' });
       });
   } catch (e) {

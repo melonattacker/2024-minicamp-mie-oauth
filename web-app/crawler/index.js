@@ -19,9 +19,9 @@ const crawlOpenRedirect = async (path, ID) => {
     console.log("target url:", targetURL);
     await page.goto(targetURL, {
         waitUntil: "domcontentloaded",
-        timeout: 1000, 
+        timeout: 500, 
     }); 
-    await page.waitForSelector("input[id=username]", { timeout: 1000 });
+    await page.waitForSelector("input[id=username]", { timeout: 500 });
     await page.type("input[id=username]", ADMIN_USERNAME);
     await page.type("input[id=password]", ADMIN_PASSWORD);
     await page.click("button[type=submit]");
@@ -45,21 +45,20 @@ const crawlCSRF = async (html, ID) => {
     console.log("login url:", loginURL);
     await page.goto(loginURL, {
       waitUntil: "domcontentloaded",
-      timeout: 1000,
+      timeout: 500,
     });
-    await page.waitForSelector("input[id=username]", { timeout: 1000 });
+    await page.waitForSelector("input[id=username]", { timeout: 500 });
     await page.type("input[id=username]", ADMIN_USERNAME);
     await page.type("input[id=password]", ADMIN_PASSWORD);
     await page.click("button[type=submit]");
 
-    await page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(500);
 
     console.log("logged in as admin");
     
     await page.setContent(html, { waitUntil: 'domcontentloaded' }); // APP_URLのページでHTMLを表示
     console.log("HTML content set");
 
-    await page.waitForTimeout(1000);
   } catch (err) {
     console.error("crawl", ID, err.message);
   } finally {
