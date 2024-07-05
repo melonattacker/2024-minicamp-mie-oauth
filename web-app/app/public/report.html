@@ -36,6 +36,11 @@
     <script>
         async function reportOpenRedirect() {
             const path = document.getElementById('path').value;
+            if (path === "") {
+                return;
+            }
+
+            document.getElementById('path').value = "";
             const response = await fetch('/report/open-redirect', {
                 method: 'POST',
                 headers: {
@@ -53,6 +58,11 @@
 
         async function reportCSRF() {
             const html = document.getElementById('csrfHtml').value;
+            if (html === "") {
+                return;
+            }
+
+            document.getElementById('csrfHtml').value = "";
             const response = await fetch('/report/csrf', {
                 method: 'POST',
                 headers: {
